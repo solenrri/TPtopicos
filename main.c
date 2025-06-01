@@ -86,7 +86,9 @@ int main(int argc, char* argv[])
     int offsetX =  0;
     int offsetY = 0;
     dibujarCampo(ventana, renderer, casilla);
-//    colocarMinas();
+    int matriz_minas[DIM][DIM];
+    colocarMinas(matriz_minas);
+    mostrar_matriz(matriz_minas);
     while (corriendo)
     {
 
@@ -108,10 +110,14 @@ int main(int argc, char* argv[])
 
                 if (boton == SDL_BUTTON_LEFT)
                 {
-                    printf("Hiciste clic izquierdo en (%d, %d) poniendo un dibujo en la posición aleatoria [%d,%d]\n", x, y, offsetX, offsetY);
-                   // dibujarSegunCorresponda(ventana, renderer,x,y);
-                    dibujar(ventana, renderer, vacia, x, y);
-                    //dibujar(ventana, renderer, mina, x, y);
+                    printf("Hiciste clic izquierdo en (%d, %d) poniendo un dibujo en la posición aleatoria [%d,%d]\n", y, x, offsetX, offsetY);
+                    if(matriz_minas[y][x]==MINA)
+                    {
+                        dibujar(ventana, renderer, mina, x, y);
+                    }else
+                    {
+                        dibujar(ventana, renderer, vacia, x, y);
+                    }
 
                 }
                 else if (boton == SDL_BUTTON_RIGHT)
@@ -119,7 +125,6 @@ int main(int argc, char* argv[])
                     printf("Hiciste clic derecho en (%d, %d)\n", x, y);
                     dibujar(ventana, renderer, bandera, x, y);
                     //borrarPantalla(ventana, renderer);
-
                 }
             }
         }
