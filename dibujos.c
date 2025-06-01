@@ -1,4 +1,5 @@
 #include "dibujos.h"
+#include <stdio.h>
 SDL_Color colores[] =
 {
     {50, 50, 50, 255},       // G[0] - Gris
@@ -80,3 +81,44 @@ void dibujarSegunCorresponda(SDL_Window *ventana, SDL_Renderer *renderer, int x,
 
 }
 */
+
+
+void colocarMinas(int matriz_minas[DIM][DIM])
+{
+    int cant_minas=10;
+    int contador=0;
+
+    inicializar_matriz(matriz_minas);
+
+     while(contador<cant_minas)
+     {
+        int fila = rand() %DIM;
+        int colum = rand() %DIM;
+        matriz_minas[fila][colum]=-1;
+        contador++;
+     }
+}
+
+void  inicializar_matriz(int matriz[DIM][DIM])
+{
+    for(int i=0;i<DIM;i++)
+    {
+        for(int j=0; j<DIM; j++)
+        {
+            matriz[i][j]=0;
+        }
+    }
+}
+
+
+void mostrar_matriz(int mat[DIM][DIM])
+{
+    for(int i=0;i<DIM;i++)
+    {
+        for(int j=0;j<DIM;j++)
+        {
+            printf("%d\t",mat[i][j]);
+        }
+        printf("\n");
+    }
+}
