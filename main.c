@@ -30,16 +30,7 @@ const int casilla[8][8] ={
     {B, G, G, G, G, G, G, G}
 };
 
-const int vacia[8][8] ={
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, C, C, C, C, C}
-};
+
 
 const int bandera[8][8] ={
     {B, B, B, B, B, B, B, G},
@@ -52,16 +43,7 @@ const int bandera[8][8] ={
     {B, G, N, N, N, N, N, G}
 };
 
-const int mina[8][8] ={
-    {C, C, C, C, C, C, C, C},
-    {C, C, C, N, N, C, C, C},
-    {C, C, N, N, N, N, C, C},
-    {C, N, B, N, N, N, N, C},
-    {C, C, N, N, N, N, C, C},
-    {C, C, N, N, N, N, C, C},
-    {C, C, C, N, N, C, C, C},
-    {C, C, C, C, C, C, C, C}
-};
+
 
 int main(int argc, char* argv[])
 {
@@ -77,7 +59,6 @@ int main(int argc, char* argv[])
 
     SDL_Renderer *renderer = SDL_CreateRenderer(ventana, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
     borrarPantalla(ventana, renderer);
     srand(time(0));
 
@@ -86,9 +67,16 @@ int main(int argc, char* argv[])
     int offsetX =  0;
     int offsetY = 0;
     dibujarCampo(ventana, renderer, casilla);
-    int matriz_minas[DIM][DIM];
+
+    //crearArchivo_conf();
+    //parametria* par;
+    //leerArchivo_conf(par)
+
+    t_celda matriz_minas[DIM][DIM];
     colocarMinas(matriz_minas);
-    mostrar_matriz(matriz_minas);
+    mostrar_matriz_minas(matriz_minas);
+    printf("\n");
+    mostrar_matriz_minas_ady(matriz_minas);
     while (corriendo)
     {
 
@@ -111,14 +99,16 @@ int main(int argc, char* argv[])
                 if (boton == SDL_BUTTON_LEFT)
                 {
                     printf("Hiciste clic izquierdo en (%d, %d) poniendo un dibujo en la posición aleatoria [%d,%d]\n", y, x, offsetX, offsetY);
-                    if(matriz_minas[y][x]==MINA)
+                    revelarCeldas(matriz_minas,y,x, ventana, renderer);
+                    /*
+                    if(matriz_minas[y][x].conMina==MINA)
                     {
                         dibujar(ventana, renderer, mina, x, y);
                     }else
                     {
                         dibujar(ventana, renderer, vacia, x, y);
                     }
-
+                */
                 }
                 else if (boton == SDL_BUTTON_RIGHT)
                 {
@@ -133,5 +123,6 @@ int main(int argc, char* argv[])
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
     SDL_Quit();
+
     return 0;
 }
