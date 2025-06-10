@@ -3,11 +3,10 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#define TAM_PIXEL 5
+#include "configuracion.h"
+#define TAM_PIXEL 4
 #define PIXELES_X_LADO 8
-#define TAM_GRILLA 8
 #define PX_PADDING 4
-#define DIM 8
 #define MINA 1
 #define VACIA 0
 
@@ -28,23 +27,17 @@ typedef struct
 
 }t_celda;
 
-typedef struct
-{
-    char dimension[6];
-    float cantidad_minas;
-}parametria;
-
 void dibujar(SDL_Window *ventana, SDL_Renderer *renderer, const int[][PIXELES_X_LADO], int oX, int oY);
-void dibujarCampo(SDL_Window *ventana, SDL_Renderer *renderer, const int[][PIXELES_X_LADO]);
+void dibujarCampo(SDL_Window *ventana, SDL_Renderer *renderer, const int[][PIXELES_X_LADO], int dimension);
 void dibujarSegunCorresponda(SDL_Window *ventana, SDL_Renderer *renderer, int x, int y);
 void borrarPantalla(SDL_Window *ventana, SDL_Renderer *renderer);
-void inicializar_matriz(t_celda matriz[DIM][DIM]);
-void colocarMinas(t_celda mat[DIM][DIM]);
-void mostrar_matriz_minas(t_celda mat[DIM][DIM]);
-void mostrar_matriz_minas_ady(t_celda mat[DIM][DIM]);
-void crearArchivo();
-void revelarCeldas(t_celda mat[DIM][DIM], int filaSeleccionada, int columnaSeleccionada,SDL_Window* ventana, SDL_Renderer*renderer);
-SDL_Texture* SDL_CargarImagenes(SDL_Renderer *renderer, const char* rutaArchivo);
+t_celda **crear_matriz(int dimension);
+void inicializar_matriz(t_celda** matriz, int dimension);
+void colocarMinas(t_celda** mat,t_parametria *param);
+void mostrar_matriz_minas(t_celda** mat, int dimension);
+void mostrar_matriz_minas_ady(t_celda** mat, int dimension);
+void revelarCeldas(t_celda** mat, int filaSeleccionada, int columnaSeleccionada,SDL_Window* ventana, SDL_Renderer*renderer, int dimension);
+void liberar_matriz(t_celda **matriz, int dimension);
 
 
 
