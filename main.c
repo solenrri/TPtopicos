@@ -18,6 +18,7 @@ Entrega: Si
 #include <stdlib.h>
 #include <time.h>
 #include "dibujos.h"
+#include "configuracion.h"
 
 const int casilla[8][8] ={
     {B, B, B, B, B, B, B, G},
@@ -48,13 +49,16 @@ const int bandera[8][8] ={
 int main(int argc, char* argv[])
 {
 
+    t_parametria par;
+    leer_Archivo(&par);
+
     SDL_Init(SDL_INIT_VIDEO);
     char nombreVentana[100];
-    sprintf(nombreVentana, "Tablero %dx%d",TAM_GRILLA,TAM_GRILLA);
+    sprintf(nombreVentana, "Tablero %dx%d",par.dimension,par.dimension);
     SDL_Window *ventana = SDL_CreateWindow(nombreVentana,
                                            SDL_WINDOWPOS_CENTERED,
                                            SDL_WINDOWPOS_CENTERED,
-                                           TAM_GRILLA * TAM_PIXEL * PIXELES_X_LADO  + TAM_GRILLA * PX_PADDING, TAM_GRILLA * TAM_PIXEL * PIXELES_X_LADO  + TAM_GRILLA * PX_PADDING,
+                                           par.dimension * TAM_PIXEL * PIXELES_X_LADO  + par.dimension * PX_PADDING, par.dimension * TAM_PIXEL * PIXELES_X_LADO  + par.dimension * PX_PADDING,
                                            2);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(ventana, -1, SDL_RENDERER_ACCELERATED);
@@ -66,17 +70,13 @@ int main(int argc, char* argv[])
     int corriendo = 1;
     int offsetX =  0;
     int offsetY = 0;
-    dibujarCampo(ventana, renderer, casilla);
+    dibujarCampo(ventana, renderer, casilla, par.dimension);
 
-    //crearArchivo_conf();
-    //parametria* par;
-    //leerArchivo_conf(par)
-
-    t_celda matriz_minas[DIM][DIM];
-    colocarMinas(matriz_minas);
-    mostrar_matriz_minas(matriz_minas);
+    t_celda** matriz_minas = crear_matriz(par.dimension);
+    colocarMinas(matriz_minas, &par);
+    mostrar_matriz_minas(matriz_minas, par.dimension);
     printf("\n");
-    mostrar_matriz_minas_ady(matriz_minas);
+    mostrar_matriz_minas_ady(matriz_minas, par.dimension);
     while (corriendo)
     {
 
@@ -98,17 +98,8 @@ int main(int argc, char* argv[])
 
                 if (boton == SDL_BUTTON_LEFT)
                 {
-                    printf("Hiciste clic izquierdo en (%d, %d) poniendo un dibujo en la posición aleatoria [%d,%d]\n", y, x, offsetX, offsetY);
-                    revelarCeldas(matriz_minas,y,x, ventana, renderer);
-                    /*
-                    if(matriz_minas[y][x].conMina==MINA)
-                    {
-                        dibujar(ventana, renderer, mina, x, y);
-                    }else
-                    {
-                        dibujar(ventana, renderer, vacia, x, y);
-                    }
-                */
+                    printf("Hiciste clic izquierdo en (%d, %d)", y, x, offsetX, offsetY);
+                    revelarCeldas(matriz_minas,y,x, ventana, renderer, par.dimension);
                 }
                 else if (boton == SDL_BUTTON_RIGHT)
                 {
@@ -123,6 +114,7 @@ int main(int argc, char* argv[])
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
     SDL_Quit();
+    liberar_matriz(matriz_minas,par.dimension);
 
     return 0;
 }
