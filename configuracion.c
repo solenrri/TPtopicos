@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int leer_Archivo(t_parametria* param)
+int leer_archivo(t_parametria* param)
 {
     FILE* archConfiguracion = fopen("buscaminas.conf", "rt");
     if(!archConfiguracion)
@@ -36,14 +36,3 @@ int valor_de_las_minas(t_parametria* param)
     else
         return atoi(param->cantidad_minas);
 }
-/*
-t_celda** crear_matriz(t_parametria* param)
-{
-    t_celda** matriz = (t_celda**)malloc((param->dimension)*sizeof(t_celda*));
-
-    if(!matriz)
-        return SIN_MEM;
-
-
-}
-*/

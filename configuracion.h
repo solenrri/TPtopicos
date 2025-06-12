@@ -11,7 +11,7 @@ typedef struct
     char cantidad_minas[4];
 }t_parametria;
 
-int leer_Archivo(t_parametria* param);
+int leer_archivo(t_parametria* param);
 int es_porcentaje(char* cad);
 int valor_de_las_minas(t_parametria* param);
 
