@@ -4,9 +4,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "configuracion.h"
-#define TAM_PIXEL 4
+#define TAM_PIXEL 2
 #define PIXELES_X_LADO 8
 #define PX_PADDING 4
+#define ENCABEZADO  50
+#define ANCHO_BOTON_REINICIO 30
+#define ALTO_BOTON_REINICIO 30
 #define MINA 1
 #define VACIA 0
 
@@ -20,10 +23,10 @@
 
 typedef struct
 {
-    bool conMina;
+    bool con_mina;
     bool revelada;
-    bool conBandera;
-    int minasCercanas;
+    bool con_bandera;
+    int  minas_cercanas;
 
 }t_celda;
 
@@ -33,13 +36,14 @@ void dibujar_segun_corresponda(SDL_Window *ventana, SDL_Renderer *renderer, int 
 void borrar_pantalla(SDL_Window *ventana, SDL_Renderer *renderer);
 t_celda **crear_matriz(int dimension);
 void inicializar_matriz(t_celda** matriz, int dimension);
-void colocarMinas(t_celda** mat,t_parametria *param);
+void colocar_minas(t_celda** mat,t_parametria *param);
 void mostrar_matriz_minas(t_celda** mat, int dimension);
 void mostrar_matriz_minas_ady(t_celda** mat, int dimension);
 void revelar_celdas(t_celda** mat, int fila_seleccionada, int columna_seleccionada,SDL_Window* ventana, SDL_Renderer*renderer, int dimension);
 void liberar_matriz(t_celda **matriz, int dimension);
 int  des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccionada);
 void revelar_cercanas(t_celda **mat, int fila_seleccionada, int columna_seleccionada, SDL_Window* ventana, SDL_Renderer*renderer, int dimension);
+void dibujar_encabezado(SDL_Renderer *renderer, int ancho_ventana);
 
 
 #endif // DIBUJOS_H_INCLUDED

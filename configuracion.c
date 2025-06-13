@@ -16,6 +16,19 @@ int leer_archivo(t_parametria* param)
         sscanf(linea, "dimension:%d", &param->dimension);
         sscanf(linea, "cantidad de minas:%s", param->cantidad_minas);
     }
+    int cant_minas = valor_de_las_minas(param);
+    if(param->dimension<8||param->dimension>32)
+    {
+        puts("El valor de la dimension debe ser mayor a 8 y menor a 32\n");
+        fclose(archConfiguracion);
+        return ERROR_ARCH;
+    }
+    if(cant_minas>=(param->dimension)*(param->dimension) ||cant_minas<1)
+    {
+        printf("La cantidad de minas debe ser mayor a 0 y menor a %d\n", param->dimension*param->dimension);
+        fclose(archConfiguracion);
+        return ERROR_ARCH;
+    }
     fclose(archConfiguracion);
     return TODO_OK;
 }
