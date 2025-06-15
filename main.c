@@ -19,6 +19,8 @@ Entrega: Si
 #include <time.h>
 #include "dibujos.h"
 #include "configuracion.h"
+#include <SDL2/SDL_ttf.h>
+
 
 const int casilla[8][8] ={
     {B, B, B, B, B, B, B, G},
@@ -45,11 +47,15 @@ const int bandera[8][8] ={
 int main(int argc, char* argv[])
 {
 
+    TTF_Init();
+    TTF_Font* fuente = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
     t_parametria par;
+   // crear_pantalla_inicio(fuente, par);
     leer_archivo(&par);
     int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
 
     SDL_Init(SDL_INIT_VIDEO);
+
     char nombre_ventana[100];
     sprintf(nombre_ventana, "Tablero %dx%d",par.dimension,par.dimension);
     SDL_Window *ventana = SDL_CreateWindow(nombre_ventana,
@@ -65,8 +71,14 @@ int main(int argc, char* argv[])
 
     SDL_Event e;
     int corriendo = 1;
+    int juego_terminado = 0;
+    int jugador_gano =0;
+    int victoria_mostrada = 0;
 
-    dibujar_encabezado(renderer, ancho_ventana);
+    SDL_Rect boton_reinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
+
+
+    dibujar_encabezado(renderer, ancho_ventana, boton_reinicio);
 
     dibujar_campo(ventana, renderer, casilla, par.dimension);
 
@@ -84,25 +96,55 @@ int main(int argc, char* argv[])
                 corriendo = 0;
                 printf("Saliendo de SDL\n");
             }
-
-            if(e.button.y >= ENCABEZADO)
+            if(!juego_terminado)
             {
-                if (e.type == SDL_MOUSEBUTTONDOWN)
+                int resultado = verificar_victoria(matriz_minas,par.dimension);
+                if(resultado==1 || resultado==2)
                 {
-                    int tam_celda = PIXELES_X_LADO * TAM_PIXEL + PX_PADDING;
+                    juego_terminado=1;
+                    jugador_gano=1;
+                }
+            }
+            if(juego_terminado &&jugador_gano && !victoria_mostrada)
+            {
+                victoria_mostrada =1;
+                mostrar_pantalla_final(fuente, "GANASTE", N);
 
-                    int x = e.button.x / tam_celda;
-                    int y = (e.button.y - ENCABEZADO) / tam_celda;
-                    int boton = e.button.button;
+            }
 
+            if(e.type == SDL_MOUSEBUTTONDOWN)
+            {
+                int tam_celda = PIXELES_X_LADO * TAM_PIXEL + PX_PADDING;
+                int boton = e.button.button;
+                int x, y;
+                if(e.button.y >= ENCABEZADO && juego_terminado==0)
+                {
+                    x = e.button.x / tam_celda;
+                    y = (e.button.y - ENCABEZADO) / tam_celda;
                     if (boton == SDL_BUTTON_LEFT)
                     {
                         if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0)
+                        {
                             revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
+                        }
+
                         else
+                        {
                             revelar_celdas(matriz_minas, y, x, ventana, renderer, par.dimension);
-                        
-                        printf("Hiciste clic izquierdo en (%d, %d)\n", y, x);
+
+                            printf("Hiciste clic izquierdo en (%d, %d)\n", y, x);
+                        }
+                        if(verificar_derrota(matriz_minas, par.dimension, y, x))
+                        {
+                            juego_terminado = true;
+                            mostrar_pantalla_final(fuente, "PERDISTE", R);
+                        }
+                        /*
+                        else if(verificar_victoria(matriz_minas,par.dimension))
+                        {
+                                juego_terminado = true;
+                                mostrar_pantalla_final(fuente_fin, "GANASTE", N);
+                        }*/
                     }
                     else if (boton == SDL_BUTTON_RIGHT)
                     {
@@ -116,8 +158,18 @@ int main(int argc, char* argv[])
                             dibujar(ventana, renderer, casilla, x, y);
                             printf("Hiciste clic derecho en (%d, %d)\n", x, y);
                         }
-                    
-                        //borrar_pantalla(ventana, renderer);
+                    }
+                }
+                else
+                {
+                    x = e.button.x;
+                    y = e.button.y;
+                    if(x>=boton_reinicio.x && x<=boton_reinicio.x + boton_reinicio.w && y>=boton_reinicio.y && y<=boton_reinicio.y + boton_reinicio.h)
+                    {
+                        reiniciar_juego(&matriz_minas, par, renderer, ventana, ancho_ventana, boton_reinicio, casilla);
+                        juego_terminado =0;
+                        jugador_gano=0;
+                        victoria_mostrada=0;
                     }
                 }
             }
@@ -126,8 +178,10 @@ int main(int argc, char* argv[])
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
-    SDL_Quit();
+    TTF_CloseFont(fuente);
     liberar_matriz(matriz_minas, par.dimension);
+    TTF_Quit();
+    SDL_Quit();
 
     return 0;
 }
