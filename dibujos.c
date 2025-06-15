@@ -1,5 +1,8 @@
 #include "dibujos.h"
 #include <stdio.h>
+#include <SDL2/SDL_ttf.h>
+
+
 SDL_Color colores[] =
 {
     { 50,  50,  50, 255},   // G[0] - Gris
@@ -141,7 +144,7 @@ void dibujar(SDL_Window *ventana, SDL_Renderer *renderer, const int dibujo[][PIX
     SDL_RenderPresent(renderer);
 }
 
-void dibujar_campo(SDL_Window *ventana, SDL_Renderer *renderer, const int   dibujo[][PIXELES_X_LADO], int dimension)
+void dibujar_campo(SDL_Window *ventana, SDL_Renderer *renderer, const int dibujo[][PIXELES_X_LADO], int dimension)
 {
     for(int i = 0; i < dimension+1; i++)
     {
@@ -172,11 +175,11 @@ void dibujar_campo(SDL_Window *ventana, SDL_Renderer *renderer, const int   dibu
 
 void borrar_pantalla(SDL_Window *ventana, SDL_Renderer *renderer)
 {
-    SDL_RenderClear(renderer);
+
     SDL_SetRenderDrawColor(renderer, 0,0,0,0);
+    SDL_RenderClear(renderer);
     SDL_Rect pixel = {0, 0, 0, 0};
     SDL_RenderFillRect(renderer, &pixel);
-    SDL_RenderPresent(renderer);
 }
 
 
@@ -261,7 +264,7 @@ void revelar_celdas(t_celda **mat, int fila_seleccionada, int columna_selecciona
 
     if(c->con_mina)
     {
-        printf("Pisaste una mina\n");
+
         for(int i=0;i<dimension;i++)
         {
             for(int j=0;j<dimension;j++)
@@ -273,6 +276,7 @@ void revelar_celdas(t_celda **mat, int fila_seleccionada, int columna_selecciona
                 }
             }
         }
+       // mostrar_pantalla_final();
         return;
     }
 
@@ -328,6 +332,24 @@ void liberar_matriz(t_celda **matriz, int dimension)
 
 int des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccionada)
 {
+    if(!mat[fila_seleccionada][columna_seleccionada].revelada)
+    {
+        if(!mat[fila_seleccionada][columna_seleccionada].con_bandera)
+        {
+            mat[fila_seleccionada][columna_seleccionada].con_bandera=true;
+            return 0;
+        }
+        else
+        {
+            mat[fila_seleccionada][columna_seleccionada].con_bandera=false;
+            return 1;
+        }
+    }
+    return 2;
+}
+/*
+int des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccionada)
+{
     t_celda *celda = &mat[fila_seleccionada][columna_seleccionada];
 
     if(!celda->revelada){
@@ -343,7 +365,7 @@ int des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccion
 
     return 2;
 }
-
+*/
 void revelar_cercanas(t_celda **mat, int fila_seleccionada, int columna_seleccionada, SDL_Window* ventana, SDL_Renderer*renderer, int dimension)
 {
     t_celda* c = &mat[fila_seleccionada][columna_seleccionada];
@@ -409,7 +431,7 @@ void revelar_cercanas(t_celda **mat, int fila_seleccionada, int columna_seleccio
 
 }
 
-void dibujar_encabezado(SDL_Renderer *renderer, int ancho_ventana)
+void dibujar_encabezado(SDL_Renderer *renderer, int ancho_ventana, SDL_Rect boton_reinicio)
 {
     SDL_SetRenderDrawColor(renderer,colores[C].r,colores[C].g,colores[C].b,colores[C].a);
     SDL_Rect encabezado = {0, 0, ancho_ventana, ENCABEZADO};
@@ -418,13 +440,126 @@ void dibujar_encabezado(SDL_Renderer *renderer, int ancho_ventana)
     SDL_SetRenderDrawColor(renderer,colores[N].r,colores[N].g,colores[N].b,colores[N].a);
     SDL_RenderDrawRect(renderer, &encabezado);
 
-        SDL_Rect botonReinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
-
     SDL_SetRenderDrawColor(renderer,colores[R].r,colores[R].g,colores[R].b,colores[R].a);
 
-
-    SDL_RenderFillRect(renderer, &botonReinicio);
+    SDL_RenderFillRect(renderer, &boton_reinicio);
 
     SDL_SetRenderDrawColor(renderer,colores[N].r,colores[N].g,colores[N].b,colores[N].a);
-    SDL_RenderDrawRect(renderer,&botonReinicio);
+    SDL_RenderDrawRect(renderer,&boton_reinicio);
 }
+
+void reiniciar_juego(t_celda ***mat, t_parametria par, SDL_Renderer *renderer,SDL_Window *ventana, int ancho_Ventana, SDL_Rect boton_reinicio, const int dibujo[][PIXELES_X_LADO])
+{
+    liberar_matriz(*mat,par.dimension);
+    borrar_pantalla(ventana,renderer);
+    *mat = crear_matriz(par.dimension);
+    dibujar_encabezado(renderer, ancho_Ventana,boton_reinicio);
+    dibujar_campo(ventana, renderer,dibujo, par.dimension);
+    colocar_minas(*mat,&par);
+    SDL_RenderPresent(renderer);
+}
+
+int verificar_victoria(t_celda **mat, int dimension)
+{
+    int victoria_normal = 1;
+    for (int i = 0; i < dimension; i++)
+    {
+        for (int j = 0; j < dimension; j++)
+        {
+            if (!mat[j][i].con_mina && !mat[j][i].revelada)
+            {
+                victoria_normal = 0;
+            }
+        }
+    }
+    int victoria_truco = 0;
+
+    if(mat[0][0].con_bandera && mat[0][dimension-1].con_bandera &&
+     mat[dimension-1][0].con_bandera && mat[dimension-1][dimension-1].con_bandera)
+     {
+         victoria_truco = 1;
+     }
+
+     if(victoria_truco)
+        return 2;
+     else if(victoria_normal)
+        return 1;
+
+     return 0;
+
+}
+
+bool verificar_derrota(t_celda** matriz, int dimension, int fila, int col)
+{
+    return matriz[fila][col].con_mina && matriz[fila][col].revelada;
+}
+
+
+void mostrar_pantalla_final(TTF_Font* fuente, char* mensaje, int color)
+{
+    SDL_Window* ventana_mensaje = SDL_CreateWindow(
+        "Resultado",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        400, 200,
+        SDL_WINDOW_SHOWN
+    );
+
+    if (!ventana_mensaje) {
+        printf("Error al crear ventana: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(ventana_mensaje, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        SDL_DestroyWindow(ventana_mensaje);
+        printf("Error al crear renderer: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_Color fondo = colores[0];
+    SDL_Color texto = colores[color];
+
+    SDL_SetRenderDrawColor(renderer, fondo.r, fondo.g, fondo.b, fondo.a);
+    SDL_RenderClear(renderer);
+
+    SDL_Surface* surface = TTF_RenderText_Blended(fuente, mensaje, texto);
+    if (!surface) {
+        printf("Error al renderizar texto: %s\n", TTF_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana_mensaje);
+        return;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Rect destino = {
+        (400 - surface->w) / 2,
+        (200 - surface->h) / 2,
+        surface->w,
+        surface->h
+    };
+    SDL_FreeSurface(surface);
+
+    SDL_RenderCopy(renderer, texture, NULL, &destino);
+    SDL_RenderPresent(renderer);
+
+
+    SDL_Event e;
+    int esperando = 1;
+    while (esperando)
+    {
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_KEYDOWN)
+            {
+                esperando = 0;
+            }
+        }
+        SDL_Delay(10);
+    }
+
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(ventana_mensaje);
+}
+
