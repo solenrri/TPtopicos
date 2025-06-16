@@ -1,8 +1,5 @@
 #include "configuracion.h"
 #include "dibujos.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 int leer_archivo(t_parametria* param)
 {
@@ -60,4 +57,17 @@ int guardar_configuracion(t_parametria par)
     fprintf(archConfiguracion,"cantidad de minas:%s", par.cantidad_minas);
     fclose(archConfiguracion);
     return TODO_OK;
+}
+
+void obtener_fecha(t_fecha *f)
+{
+    time_t t = time(NULL);
+    struct tm *fecha = localtime(&t);
+
+    f->dia  = fecha->tm_mday;
+    f->mes  = fecha->tm_mon + 1;
+    f->anio = fecha->tm_year+ 1900;
+    f->h    = fecha->tm_hour;
+    f->m    = fecha->tm_min;
+    f->s    = fecha->tm_sec;
 }

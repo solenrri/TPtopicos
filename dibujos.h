@@ -2,8 +2,6 @@
 #define DIBUJOS_H_INCLUDED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <stdbool.h>
-#include <stdlib.h>
 #include "configuracion.h"
 #define TAM_PIXEL 4
 #define PIXELES_X_LADO 8
@@ -20,8 +18,8 @@
 #define B 2 // Blanco
 #define V 3 // Verde
 #define R 4 // Rojo
-#define N 5 //Negro
-#define A 6 //Azul
+#define N 5 // Negro
+#define A 6 // Azul
 
 typedef struct
 {

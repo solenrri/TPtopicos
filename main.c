@@ -13,15 +13,9 @@ Apellido: Cuevas, Brandon Nahuel
 DNI: 43510488
 Entrega: Si
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include "dibujos.h"
 #include "configuracion.h"
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
-
 
 
 const int casilla[8][8] ={
@@ -49,14 +43,20 @@ const int bandera[8][8] ={
 int main(int argc, char* argv[])
 {
 
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
     TTF_Init();
     TTF_Font* fuente_resultado = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
-    TTF_Font* fuente_inicio = TTF_OpenFont("BebasNeue-Regular.ttf", 26);
+    TTF_Font* fuente_inicio = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 20);
 
     t_parametria par;
     crear_pantalla_inicio(fuente_inicio, par);
+
+    t_fecha f;
+    FILE *log;
+    log = fopen("buscaminas.log", "wt");
+
+    if(!log){
+        return 0;
+    }
 
     if(leer_archivo(&par)==ERROR_ARCH)
     {
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
 
-
+    SDL_Init(SDL_INIT_VIDEO);
 
     char nombre_ventana[100];
     sprintf(nombre_ventana, "Tablero %dx%d",par.dimension,par.dimension);
@@ -88,12 +88,11 @@ int main(int argc, char* argv[])
     int juego_terminado = 0;
     int jugador_gano =0;
     int victoria_mostrada = 0;
+    int primer_click = 0;
 
     SDL_Rect boton_reinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
 
-
     dibujar_encabezado(renderer, ancho_ventana, boton_reinicio);
-
     dibujar_campo(ventana, renderer, casilla, par.dimension);
 
     t_celda** matriz_minas = crear_matriz(par.dimension);
@@ -101,7 +100,8 @@ int main(int argc, char* argv[])
     mostrar_matriz_minas(matriz_minas, par.dimension);
     printf("\n");
     mostrar_matriz_minas_ady(matriz_minas, par.dimension);
-    int primer_click = 0;
+    obtener_fecha(&f);
+    fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Inicia juego\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
     while (corriendo)
     {
         while (SDL_PollEvent(&e))
@@ -123,6 +123,8 @@ int main(int argc, char* argv[])
             if(juego_terminado &&jugador_gano && !victoria_mostrada)
             {
                 victoria_mostrada =1;
+                obtener_fecha(&f);
+                fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Ganaste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
                 mostrar_pantalla_final(fuente_resultado, "GANASTE", N);
             }
 
@@ -139,23 +141,26 @@ int main(int argc, char* argv[])
                     {
                         if(matriz_minas[y][x].con_mina && primer_click==0)
                         {
-                            colocar_minas(matriz_minas,&par);
+                            colocar_minas(matriz_minas, &par);
                         }
-                        primer_click=1;
-                        if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0)
+                        primer_click = 1;
+
+                        if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0 && (!matriz_minas[y][x].con_mina))
                         {
                             revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
                         }
-
                         else
                         {
                             revelar_celdas(matriz_minas, y, x, ventana, renderer, par.dimension);
 
-                            printf("Hiciste clic izquierdo en (%d, %d)\n", y, x);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                         if(verificar_derrota(matriz_minas, par.dimension, y, x))
                         {
                             juego_terminado = true;
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Perdiste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
                             mostrar_pantalla_final(fuente_resultado, "PERDISTE", R);
                         }
                     }
@@ -165,11 +170,13 @@ int main(int argc, char* argv[])
 
                         if(bandera2 == 0){
                             dibujar(ventana, renderer, bandera, x, y);
-                            printf("Hiciste clic derecho en (%d, %d)\n", x, y);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                         else if(bandera2 ==1){
                             dibujar(ventana, renderer, casilla, x, y);
-                            printf("Hiciste clic derecho en (%d, %d)\n", x, y);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                     }
                 }
@@ -183,7 +190,6 @@ int main(int argc, char* argv[])
                         juego_terminado =0;
                         jugador_gano=0;
                         victoria_mostrada=0;
-                        primer_click=0;
                     }
                 }
             }
@@ -196,9 +202,9 @@ int main(int argc, char* argv[])
     TTF_CloseFont(fuente_inicio);
 
     liberar_matriz(matriz_minas, par.dimension);
-    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
+    fclose(log);
 
     return 0;
 }
