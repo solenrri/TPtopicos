@@ -13,6 +13,7 @@
 #define ALTO_BOTON_REINICIO 30
 #define MINA 1
 #define VACIA 0
+#define MAX_CARAC   30
 
 #define G 0 // Gris
 #define C 1 // Claro
@@ -49,6 +50,5 @@ int verificar_victoria(t_celda **mat, int dimension);
 void mostrar_pantalla_final(TTF_Font* fuente, char* mensaje, int color);
 bool verificar_derrota(t_celda** matriz, int dimension, int fila, int col);
 void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par);
-void guardar_configuracion(t_parametria par);
 
 #endif // DIBUJOS_H_INCLUDED
