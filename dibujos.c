@@ -1,6 +1,7 @@
 #include "dibujos.h"
 #include <stdio.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 
 
 SDL_Color colores[] =
@@ -557,7 +558,7 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
 
     if (!ventana_inicio)
     {
-        printf("Error al crear ventana: %s\n", SDL_GetError());
+        printf("Error al crear ventana\n");
         return;
     }
 
@@ -565,9 +566,24 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     if (!renderer)
     {
         SDL_DestroyWindow(ventana_inicio);
-        printf("Error al crear renderer: %s\n", SDL_GetError());
+        printf("Error al crear renderer\n");
         return;
     }
+
+
+    SDL_Surface* fondo_surface = IMG_Load("fondo_inicio.png");
+    if (!fondo_surface)
+    {
+        printf("No se pudo cargar la imagen de fondo\n");
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana_inicio);
+        return;
+    }
+
+    SDL_Texture* fondo_texture = SDL_CreateTextureFromSurface(renderer, fondo_surface);
+    SDL_FreeSurface(fondo_surface);
+
+
     SDL_StartTextInput();
     SDL_Event e;
     int corriendo = 1;
@@ -614,15 +630,22 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
 
     SDL_RenderClear(renderer);
 
+    SDL_RenderCopy(renderer, fondo_texture, NULL, NULL);
+
+
     for (int i = 0; i < 3; i++)
     {
         char texto[100];
         sprintf(texto, "%s %s", etiquetas[i], entrada_datos[i]);
 
-        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[C] : colores[G]);
+        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[N] : colores[G]);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-        SDL_Rect dst = {50, 20 + i * 60, surface->w, surface->h};
+        SDL_SetRenderDrawColor(renderer, colores[A].r, colores[C].g, colores[C].b, colores[C].a);
+        SDL_Rect fondo_texto = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_RenderFillRect(renderer, &fondo_texto);
+
+        SDL_Rect dst = {50, 20 + i * 65, surface->w, surface->h};
         SDL_RenderCopy(renderer, texture, NULL, &dst);
 
         SDL_FreeSurface(surface);
@@ -635,6 +658,7 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     SDL_StopTextInput();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana_inicio);
+    SDL_DestroyTexture(fondo_texture);
 
     strcpy(usuario,entrada_datos[0]);
     par.dimension = atoi(entrada_datos[1]);
