@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
             {
                 victoria_mostrada =1;
                 obtener_fecha(&f);
-                fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Ganaste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+                fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin del Juego  - Ganaste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
                 mostrar_pantalla_final(fuente_resultado, "GANASTE", N);
             }
 
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
                         {
                             juego_terminado = true;
                             obtener_fecha(&f);
-                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Perdiste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin del Juego - Perdiste\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
                             mostrar_pantalla_final(fuente_resultado, "PERDISTE", R);
                         }
                     }
