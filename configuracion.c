@@ -49,3 +49,15 @@ int valor_de_las_minas(t_parametria* param)
     else
         return atoi(param->cantidad_minas);
 }
+
+int guardar_configuracion(t_parametria par)
+{
+    FILE* archConfiguracion = fopen("buscaminas.conf", "wt");
+    if(!archConfiguracion)
+        return ERROR_ARCH;
+
+    fprintf(archConfiguracion,"dimension:%d\n", par.dimension);
+    fprintf(archConfiguracion,"cantidad de minas:%s", par.cantidad_minas);
+    fclose(archConfiguracion);
+    return TODO_OK;
+}
