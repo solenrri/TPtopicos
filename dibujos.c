@@ -1,6 +1,8 @@
 #include "dibujos.h"
 #include <stdio.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+
 
 
 SDL_Color colores[] =
@@ -443,7 +445,7 @@ void reiniciar_juego(t_celda ***mat, t_parametria par, SDL_Renderer *renderer,SD
 int verificar_victoria(t_celda **mat, int dimension)
 {
     int victoria_normal = 1;
-    
+
     for (int i = 0; i < dimension; i++)
     {
         for (int j = 0; j < dimension; j++)
@@ -544,7 +546,7 @@ void mostrar_pantalla_final(TTF_Font* fuente, char* mensaje, int color)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana_mensaje);
 }
-
+/*
 void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
 {
     SDL_Window* ventana_inicio = SDL_CreateWindow(
@@ -650,5 +652,121 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     strcpy(par.cantidad_minas,entrada_datos[2]);
     guardar_configuracion(par);
 }
+*/
+void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
+{
+    SDL_Window* ventana_inicio = SDL_CreateWindow(
+        "Inicio",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        400, 200,
+        SDL_WINDOW_SHOWN
+    );
+
+    if (!ventana_inicio)
+    {
+        printf("Error al crear ventana\n");
+        return;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(ventana_inicio, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        SDL_DestroyWindow(ventana_inicio);
+        printf("Error al crear renderer\n");
+        return;
+    }
 
 
+    SDL_Surface* fondo_surface = IMG_Load("fondo_inicio.png");
+    if (!fondo_surface)
+    {
+        printf("No se pudo cargar la imagen de fondo\n");
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana_inicio);
+        return;
+    }
+
+    SDL_Texture* fondo_texture = SDL_CreateTextureFromSurface(renderer, fondo_surface);
+    SDL_FreeSurface(fondo_surface);
+
+    SDL_StartTextInput();
+    SDL_Event e;
+    int corriendo = 1;
+    char usuario [30];
+    const char *etiquetas[]= {"Usuario:","Dimension:", "Cantidad de Minas:"};
+    char entrada_datos[3][50] = {"", "", ""};
+    int campo_activo = 0;
+
+    while(corriendo)
+    {
+        while(SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
+            {
+                SDL_StopTextInput();
+                corriendo = 0;
+                printf("Saliendo de SDL\n");
+            }else if(e.type == SDL_KEYDOWN)
+            {
+                 if (e.key.keysym.sym == SDLK_TAB)
+                {
+                    campo_activo = (campo_activo + 1) % 3;
+                } else if (e.key.keysym.sym == SDLK_RETURN)
+                {
+                    if(strlen(entrada_datos[0])>0 && strlen(entrada_datos[1])>0 && strlen(entrada_datos[2])>0)
+                    {
+                        corriendo = 0;
+                    }
+                } else if (e.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    int len = strlen(entrada_datos[campo_activo]);
+                    if (len > 0)
+                        entrada_datos[campo_activo][len - 1] = '\0';
+                }
+            } else if (e.type == SDL_TEXTINPUT)
+             {
+                if (strlen(entrada_datos[campo_activo]) < MAX_CARAC - 1)
+                {
+                    strcat(entrada_datos[campo_activo], e.text.text);
+                }
+            }
+        }
+
+
+    SDL_RenderClear(renderer);
+
+    SDL_RenderCopy(renderer, fondo_texture, NULL, NULL);
+
+
+    for (int i = 0; i < 3; i++)
+    {
+        char texto[100];
+        sprintf(texto, "%s %s", etiquetas[i], entrada_datos[i]);
+
+        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[N] : colores[G]);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+        SDL_SetRenderDrawColor(renderer, colores[A].r, colores[C].g, colores[C].b, colores[C].a);
+        SDL_Rect fondo_texto = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_RenderFillRect(renderer, &fondo_texto);
+
+        SDL_Rect dst = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+
+    SDL_RenderPresent(renderer);
+    }
+    SDL_StopTextInput();
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(ventana_inicio);
+    SDL_DestroyTexture(fondo_texture);
+
+    strcpy(usuario,entrada_datos[0]);
+    par.dimension = atoi(entrada_datos[1]);
+    strcpy(par.cantidad_minas,entrada_datos[2]);
+    guardar_configuracion(par);
+}
