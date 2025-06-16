@@ -730,6 +730,15 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
                 {
                     strcat(entrada_datos[campo_activo], e.text.text);
                 }
+            }else if(e.type == SDL_MOUSEBUTTONDOWN)
+            {
+                int boton = e.button.button;
+                int y = round(e.button.y / 50);
+
+                if (boton == SDL_BUTTON_LEFT)
+                {
+                    campo_activo = y;
+                }
             }
         }
 
@@ -748,10 +757,10 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
         SDL_SetRenderDrawColor(renderer, colores[A].r, colores[C].g, colores[C].b, colores[C].a);
-        SDL_Rect fondo_texto = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_Rect fondo_texto = {50, 10 + i * 50, surface->w, surface->h};
         SDL_RenderFillRect(renderer, &fondo_texto);
 
-        SDL_Rect dst = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_Rect dst = {50, 10 + i * 50, surface->w, surface->h};
         SDL_RenderCopy(renderer, texture, NULL, &dst);
 
         SDL_FreeSurface(surface);
