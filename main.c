@@ -196,6 +196,7 @@ int main(int argc, char* argv[])
                         juego_terminado =0;
                         jugador_gano=0;
                         victoria_mostrada=0;
+                         int primer_click = 0;
                     }
                 }
             }
