@@ -142,17 +142,20 @@ int main(int argc, char* argv[])
                         if(matriz_minas[y][x].con_mina && primer_click==0)
                         {
                             colocar_minas(matriz_minas, &par);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                         primer_click = 1;
 
                         if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0 && (!matriz_minas[y][x].con_mina))
                         {
                             revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                         else
                         {
                             revelar_celdas(matriz_minas, y, x, ventana, renderer, par.dimension);
-
                             obtener_fecha(&f);
                             fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
