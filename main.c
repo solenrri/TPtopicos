@@ -48,10 +48,20 @@ int main(int argc, char* argv[])
 {
 
     TTF_Init();
-    TTF_Font* fuente = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
+    TTF_Font* fuente_resultado = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
+    TTF_Font* fuente_inicio = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 20);
+
     t_parametria par;
-   // crear_pantalla_inicio(fuente, par);
-    leer_archivo(&par);
+    crear_pantalla_inicio(fuente_inicio, par);
+
+    if(leer_archivo(&par)==ERROR_ARCH)
+    {
+        TTF_CloseFont(fuente_resultado);
+        TTF_CloseFont(fuente_inicio);
+        TTF_Quit();
+        return 0;
+    }
+
     int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -87,6 +97,7 @@ int main(int argc, char* argv[])
     mostrar_matriz_minas(matriz_minas, par.dimension);
     printf("\n");
     mostrar_matriz_minas_ady(matriz_minas, par.dimension);
+    int primer_click = 0;
     while (corriendo)
     {
         while (SDL_PollEvent(&e))
@@ -108,8 +119,7 @@ int main(int argc, char* argv[])
             if(juego_terminado &&jugador_gano && !victoria_mostrada)
             {
                 victoria_mostrada =1;
-                mostrar_pantalla_final(fuente, "GANASTE", N);
-
+                mostrar_pantalla_final(fuente_resultado, "GANASTE", N);
             }
 
             if(e.type == SDL_MOUSEBUTTONDOWN)
@@ -123,6 +133,11 @@ int main(int argc, char* argv[])
                     y = (e.button.y - ENCABEZADO) / tam_celda;
                     if (boton == SDL_BUTTON_LEFT)
                     {
+                        if(matriz_minas[y][x].con_mina && primer_click==0)
+                        {
+                            colocar_minas(matriz_minas,&par);
+                            primer_click=1;
+                        }
                         if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0)
                         {
                             revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
@@ -137,14 +152,8 @@ int main(int argc, char* argv[])
                         if(verificar_derrota(matriz_minas, par.dimension, y, x))
                         {
                             juego_terminado = true;
-                            mostrar_pantalla_final(fuente, "PERDISTE", R);
+                            mostrar_pantalla_final(fuente_resultado, "PERDISTE", R);
                         }
-                        /*
-                        else if(verificar_victoria(matriz_minas,par.dimension))
-                        {
-                                juego_terminado = true;
-                                mostrar_pantalla_final(fuente_fin, "GANASTE", N);
-                        }*/
                     }
                     else if (boton == SDL_BUTTON_RIGHT)
                     {
@@ -178,7 +187,9 @@ int main(int argc, char* argv[])
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
-    TTF_CloseFont(fuente);
+    TTF_CloseFont(fuente_resultado);
+    TTF_CloseFont(fuente_inicio);
+
     liberar_matriz(matriz_minas, par.dimension);
     TTF_Quit();
     SDL_Quit();
