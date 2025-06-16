@@ -198,7 +198,7 @@ void colocar_minas(t_celda **matriz_minas, t_parametria* param)
         if(!matriz_minas[fila][colum].con_mina){
             matriz_minas[fila][colum].con_mina=1;
             minasColocadas++;
-            //cuento las minas cercanas
+
             for(int i=-1;i<=1;i++)
             {
                 for(int j=-1;j<=1;j++)
@@ -276,7 +276,7 @@ void revelar_celdas(t_celda **mat, int fila_seleccionada, int columna_selecciona
                 }
             }
         }
-       // mostrar_pantalla_final();
+
         return;
     }
 
@@ -347,25 +347,7 @@ int des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccion
     }
     return 2;
 }
-/*
-int des_asig_bandera(t_celda **mat, int fila_seleccionada, int columna_seleccionada)
-{
-    t_celda *celda = &mat[fila_seleccionada][columna_seleccionada];
 
-    if(!celda->revelada){
-        if(!celda->con_bandera){
-            celda->con_bandera = true;
-            return 0;
-        }
-        else{
-            celda->con_bandera = false;
-            return 1;
-        }
-    }
-
-    return 2;
-}
-*/
 void revelar_cercanas(t_celda **mat, int fila_seleccionada, int columna_seleccionada, SDL_Window* ventana, SDL_Renderer*renderer, int dimension)
 {
     t_celda* c = &mat[fila_seleccionada][columna_seleccionada];
@@ -562,4 +544,102 @@ void mostrar_pantalla_final(TTF_Font* fuente, char* mensaje, int color)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana_mensaje);
 }
+
+void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
+{
+    SDL_Window* ventana_inicio = SDL_CreateWindow(
+        "Inicio",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        400, 200,
+        SDL_WINDOW_SHOWN
+    );
+
+    if (!ventana_inicio)
+    {
+        printf("Error al crear ventana: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(ventana_inicio, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        SDL_DestroyWindow(ventana_inicio);
+        printf("Error al crear renderer: %s\n", SDL_GetError());
+        return;
+    }
+    SDL_StartTextInput();
+    SDL_Event e;
+    int corriendo = 1;
+    char usuario [30];
+    const char *etiquetas[]= {"Usuario:","Dimension:", "Cantidad de Minas:"};
+    char entrada_datos[3][50] = {"", "", ""};
+    int campo_activo = 0;
+
+    while(corriendo)
+    {
+        while(SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
+            {
+                SDL_StopTextInput();
+                corriendo = 0;
+                printf("Saliendo de SDL\n");
+            }else if(e.type == SDL_KEYDOWN)
+            {
+                 if (e.key.keysym.sym == SDLK_TAB)
+                {
+                    campo_activo = (campo_activo + 1) % 3;
+                } else if (e.key.keysym.sym == SDLK_RETURN)
+                {
+                    if(strlen(entrada_datos[0])>0 && strlen(entrada_datos[1])>0 && strlen(entrada_datos[2])>0)
+                    {
+                        corriendo = 0;
+                    }
+                } else if (e.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    int len = strlen(entrada_datos[campo_activo]);
+                    if (len > 0)
+                        entrada_datos[campo_activo][len - 1] = '\0';
+                }
+            } else if (e.type == SDL_TEXTINPUT)
+             {
+                if (strlen(entrada_datos[campo_activo]) < MAX_CARAC - 1)
+                {
+                    strcat(entrada_datos[campo_activo], e.text.text);
+                }
+            }
+        }
+
+
+    SDL_RenderClear(renderer);
+
+    for (int i = 0; i < 3; i++)
+    {
+        char texto[100];
+        sprintf(texto, "%s %s", etiquetas[i], entrada_datos[i]);
+
+        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[C] : colores[G]);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+        SDL_Rect dst = {50, 20 + i * 60, surface->w, surface->h};
+        SDL_RenderCopy(renderer, texture, NULL, &dst);
+
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+
+    SDL_RenderPresent(renderer);
+
+    }
+    SDL_StopTextInput();
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(ventana_inicio);
+
+    strcpy(usuario,entrada_datos[0]);
+    par.dimension = atoi(entrada_datos[1]);
+    strcpy(par.cantidad_minas,entrada_datos[2]);
+    guardar_configuracion(par);
+}
+
 
