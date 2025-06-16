@@ -185,19 +185,19 @@ void borrar_pantalla(SDL_Window *ventana, SDL_Renderer *renderer)
 
 void colocar_minas(t_celda **matriz_minas, t_parametria* param)
 {
-    int minasColocadas=0;
+    int minas_colocadas=0;
 
     inicializar_matriz(matriz_minas, param->dimension);
     int cant_minas = valor_de_las_minas(param);
 
-     while(minasColocadas<cant_minas)
+     while(minas_colocadas<cant_minas)
      {
         int fila = rand() % (param->dimension);
         int colum = rand() % (param->dimension);
 
         if(!matriz_minas[fila][colum].con_mina){
             matriz_minas[fila][colum].con_mina=1;
-            minasColocadas++;
+            minas_colocadas++;
 
             for(int i=-1;i<=1;i++)
             {
@@ -551,13 +551,13 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
         "Inicio",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        400, 150,
+        400, 200,
         SDL_WINDOW_SHOWN
     );
 
     if (!ventana_inicio)
     {
-        printf("Error al crear ventana: %s\n", SDL_GetError());
+        printf("Error al crear ventana\n");
         return;
     }
 
@@ -565,9 +565,24 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     if (!renderer)
     {
         SDL_DestroyWindow(ventana_inicio);
-        printf("Error al crear renderer: %s\n", SDL_GetError());
+        printf("Error al crear renderer\n");
         return;
     }
+
+
+    SDL_Surface* fondo_surface = IMG_Load("fondo_inicio.png");
+    if (!fondo_surface)
+    {
+        printf("No se pudo cargar la imagen de fondo\n");
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana_inicio);
+        return;
+    }
+
+    SDL_Texture* fondo_texture = SDL_CreateTextureFromSurface(renderer, fondo_surface);
+    SDL_FreeSurface(fondo_surface);
+
+
     SDL_StartTextInput();
     SDL_Event e;
     int corriendo = 1;
@@ -602,20 +617,11 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
                     if (len > 0)
                         entrada_datos[campo_activo][len - 1] = '\0';
                 }
-            }else if (e.type == SDL_TEXTINPUT)
-            {
+            } else if (e.type == SDL_TEXTINPUT)
+             {
                 if (strlen(entrada_datos[campo_activo]) < MAX_CARAC - 1)
                 {
                     strcat(entrada_datos[campo_activo], e.text.text);
-                }
-            }else if(e.type == SDL_MOUSEBUTTONDOWN)
-            {
-                int boton = e.button.button;
-                int y = round(e.button.y / 50);
-
-                if (boton == SDL_BUTTON_LEFT)
-                {
-                    campo_activo = y;
                 }
             }
         }
@@ -623,15 +629,22 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
 
     SDL_RenderClear(renderer);
 
+    SDL_RenderCopy(renderer, fondo_texture, NULL, NULL);
+
+
     for (int i = 0; i < 3; i++)
     {
         char texto[100];
         sprintf(texto, "%s %s", etiquetas[i], entrada_datos[i]);
 
-        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[C] : colores[G]);
+        SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto, i == campo_activo ? colores[N] : colores[G]);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
 
-        SDL_Rect dst = {50, 10 + i * 50, surface->w, surface->h};
+        SDL_SetRenderDrawColor(renderer, colores[A].r, colores[C].g, colores[C].b, colores[C].a);
+        SDL_Rect fondo_texto = {50, 20 + i * 65, surface->w, surface->h};
+        SDL_RenderFillRect(renderer, &fondo_texto);
+
+        SDL_Rect dst = {50, 20 + i * 65, surface->w, surface->h};
         SDL_RenderCopy(renderer, texture, NULL, &dst);
 
         SDL_FreeSurface(surface);
@@ -644,11 +657,13 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     SDL_StopTextInput();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana_inicio);
+    SDL_DestroyTexture(fondo_texture);
 
     strcpy(usuario,entrada_datos[0]);
     par.dimension = atoi(entrada_datos[1]);
     strcpy(par.cantidad_minas,entrada_datos[2]);
     guardar_configuracion(par);
 }
+
 
 
