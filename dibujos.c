@@ -737,7 +737,14 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
 
                 if (boton == SDL_BUTTON_LEFT)
                 {
-                    campo_activo = y;
+                    if(y<=2){
+                        campo_activo = y;
+                    }
+                    else{
+                        if(strlen(entrada_datos[0])>0 && strlen(entrada_datos[1])>0 && strlen(entrada_datos[2])>0)
+                            corriendo = 0;
+                    }
+
                 }
             }
         }
@@ -766,6 +773,24 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
         SDL_FreeSurface(surface);
         SDL_DestroyTexture(texture);
     }
+
+    //test
+    char texto2[10];
+    sprintf(texto2, "Enter");
+
+    SDL_Surface* surface = TTF_RenderText_Solid(fuente, texto2, 3 == campo_activo ? colores[N] : colores[G]);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_SetRenderDrawColor(renderer, colores[A].r, colores[C].g, colores[C].b, colores[C].a);
+    SDL_Rect fondo_texto = {300, 10+150, surface->w, surface->h};
+    SDL_RenderFillRect(renderer, &fondo_texto);
+
+    SDL_Rect dst = {300, 10+150, surface->w, surface->h};
+    SDL_RenderCopy(renderer, texture, NULL, &dst);
+
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+
 
     SDL_RenderPresent(renderer);
     }
