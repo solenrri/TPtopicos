@@ -1,3 +1,4 @@
+
 #ifndef CONFIGURACION_H_INCLUDED
 #define CONFIGURACION_H_INCLUDED
 
@@ -14,6 +15,7 @@ typedef struct
 int leer_archivo(t_parametria* param);
 int es_porcentaje(char* cad);
 int valor_de_las_minas(t_parametria* param);
+int guardar_configuracion(t_parametria par);
 
 
 #endif // CONFIGURACION_H_INCLUDED
