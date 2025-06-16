@@ -103,8 +103,6 @@ int main(int argc, char* argv[])
     mostrar_matriz_minas(matriz_minas, par.dimension);
     printf("\n");
     mostrar_matriz_minas_ady(matriz_minas, par.dimension);
-    obtener_fecha(&f);
-    fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Inicia partida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
     while (corriendo)
     {
         while (SDL_PollEvent(&e))
@@ -142,13 +140,18 @@ int main(int argc, char* argv[])
                     y = (e.button.y - ENCABEZADO) / tam_celda;
                     if (boton == SDL_BUTTON_LEFT)
                     {
-                        if(matriz_minas[y][x].con_mina && primer_click==0)
+                        if(primer_click==0)
                         {
-                            colocar_minas(matriz_minas, &par);
                             obtener_fecha(&f);
-                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Inicia partida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+                            primer_click = 1;
+
+                            if(matriz_minas[y][x].con_mina){
+                                colocar_minas(matriz_minas, &par);
+                                obtener_fecha(&f);
+                                fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                            }
                         }
-                        primer_click = 1;
 
                         if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0 && (!matriz_minas[y][x].con_mina))
                         {
