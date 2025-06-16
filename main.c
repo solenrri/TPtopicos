@@ -20,6 +20,8 @@ Entrega: Si
 #include "dibujos.h"
 #include "configuracion.h"
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+
 
 
 const int casilla[8][8] ={
@@ -47,9 +49,11 @@ const int bandera[8][8] ={
 int main(int argc, char* argv[])
 {
 
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_PNG);
     TTF_Init();
     TTF_Font* fuente_resultado = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
-    TTF_Font* fuente_inicio = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 20);
+    TTF_Font* fuente_inicio = TTF_OpenFont("BebasNeue-Regular.ttf", 26);
 
     t_parametria par;
     crear_pantalla_inicio(fuente_inicio, par);
@@ -64,7 +68,7 @@ int main(int argc, char* argv[])
 
     int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
 
-    SDL_Init(SDL_INIT_VIDEO);
+
 
     char nombre_ventana[100];
     sprintf(nombre_ventana, "Tablero %dx%d",par.dimension,par.dimension);
@@ -136,8 +140,8 @@ int main(int argc, char* argv[])
                         if(matriz_minas[y][x].con_mina && primer_click==0)
                         {
                             colocar_minas(matriz_minas,&par);
-                            primer_click=1;
                         }
+                        primer_click=1;
                         if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0)
                         {
                             revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
@@ -179,6 +183,7 @@ int main(int argc, char* argv[])
                         juego_terminado =0;
                         jugador_gano=0;
                         victoria_mostrada=0;
+                        primer_click=0;
                     }
                 }
             }
@@ -191,6 +196,7 @@ int main(int argc, char* argv[])
     TTF_CloseFont(fuente_inicio);
 
     liberar_matriz(matriz_minas, par.dimension);
+    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
 
