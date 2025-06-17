@@ -20,7 +20,12 @@
 #define R 4 // Rojo
 #define N 5 // Negro
 #define A 6 // Azul
+#define L 7 // Celeste
 
+
+
+#define ANCHO_MENU  400
+#define ANCHO_CUADRADO_MENU  300
 typedef struct
 {
     bool con_mina;
@@ -50,5 +55,10 @@ bool verificar_derrota(t_celda** matriz, int dimension, int fila, int col);
 void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par);
 void mostrar_texto(SDL_Renderer* renderer, TTF_Font* fuente, const char* texto, int x, int y, int);
 int calcular_tamano_fuente(int);
+void crear_pantalla_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect botones[]);
+void validar_click_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect botones_menu[]);
+void iniciar_juego();
+
+
 
 #endif // DIBUJOS_H_INCLUDED
