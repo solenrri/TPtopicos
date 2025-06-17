@@ -318,7 +318,7 @@ void revelar_celdas(t_celda **mat, int fila_seleccionada, int columna_selecciona
     }
     else
     {
-        dibujar(ventana, renderer, vector_numeros[(c->minas_cercanas)-1], columna_seleccionada, fila_seleccionada);
+        dibujar(ventana, renderer, (const int(*)[8])vector_numeros[(c->minas_cercanas)-1], columna_seleccionada, fila_seleccionada);
     }
 }
 
