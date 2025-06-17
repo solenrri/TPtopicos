@@ -48,5 +48,7 @@ int verificar_victoria(t_celda **mat, int dimension);
 void mostrar_pantalla_final(TTF_Font* fuente, char* mensaje, int color);
 bool verificar_derrota(t_celda** matriz, int dimension, int fila, int col);
 void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par);
+void mostrar_texto(SDL_Renderer* renderer, TTF_Font* fuente, const char* texto, int x, int y, int);
+int calcular_tamano_fuente(int);
 
 #endif // DIBUJOS_H_INCLUDED

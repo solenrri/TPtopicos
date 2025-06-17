@@ -431,6 +431,44 @@ void dibujar_encabezado(SDL_Renderer *renderer, int ancho_ventana, SDL_Rect boto
     SDL_RenderDrawRect(renderer,&boton_reinicio);
 }
 
+void mostrar_texto(SDL_Renderer* renderer, TTF_Font* fuente, const char* texto, int x, int y, int alinear_derecha) {
+    SDL_Color color = colores[R];
+
+    // Crear superficie con el texto
+    SDL_Surface* superficie = TTF_RenderText_Solid(fuente, texto, color);
+    if (!superficie) return;
+
+    SDL_Texture* textura = SDL_CreateTextureFromSurface(renderer, superficie);
+
+    int ancho = superficie->w;
+    int alto = superficie->h;
+
+    // Si se debe alinear a la derecha, ajustar posición X
+    if (alinear_derecha) {
+        x = x - ancho;
+    }
+
+    SDL_Rect rect = {x, y, ancho, alto};
+
+    // Dibujar fondo negro
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &rect);
+
+    // Dibujar texto encima
+    SDL_RenderCopy(renderer, textura, NULL, &rect);
+
+    // Liberar recursos
+    SDL_FreeSurface(superficie);
+    SDL_DestroyTexture(textura);
+}
+
+int calcular_tamano_fuente(int dimension) {
+    int tam_fuente = dimension * 2.5;
+    if (tam_fuente < 16) tam_fuente = 16;
+    if (tam_fuente > 32) tam_fuente = 32;
+    return tam_fuente;
+}
+
 void reiniciar_juego(t_celda ***mat, t_parametria par, SDL_Renderer *renderer,SDL_Window *ventana, int ancho_Ventana, SDL_Rect boton_reinicio, const int dibujo[][PIXELES_X_LADO])
 {
     liberar_matriz(*mat,par.dimension);

@@ -73,6 +73,10 @@ int main(int argc, char* argv[])
 
     SDL_Init(SDL_INIT_VIDEO);
 
+    // Inicialización del temporizador
+    Uint32 tiempo_ultimo_segundo = SDL_GetTicks();
+    int segundos = 0;
+
     char nombre_ventana[100];
     sprintf(nombre_ventana, "Tablero %dx%d",par.dimension,par.dimension);
     SDL_Window *ventana = SDL_CreateWindow(nombre_ventana,
@@ -92,6 +96,12 @@ int main(int argc, char* argv[])
     int jugador_gano =0;
     int victoria_mostrada = 0;
     int primer_click = 0;
+    int banderas_colocadas = valor_de_las_minas(&par);
+    int padding = 10;
+    char texto_tiempo[32];
+    char texto_banderas[32];
+
+    TTF_Font* fuente_digital = TTF_OpenFont("DS-DIGI.TTF", calcular_tamano_fuente(par.dimension));
 
     SDL_Rect boton_reinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
 
@@ -103,8 +113,24 @@ int main(int argc, char* argv[])
     mostrar_matriz_minas(matriz_minas, par.dimension);
     printf("\n");
     mostrar_matriz_minas_ady(matriz_minas, par.dimension);
+
     while (corriendo)
     {
+        // Controlar si pasó un segundo para actualizar el temporizador
+        Uint32 tiempo_actual = SDL_GetTicks();
+        if (tiempo_actual - tiempo_ultimo_segundo >= 1000 && primer_click==1 && juego_terminado!=1) {
+            segundos++;
+            tiempo_ultimo_segundo = tiempo_actual;
+        }
+        // Redibujar encabezado y contadores
+        dibujar_encabezado(renderer, ancho_ventana,boton_reinicio);
+        sprintf(texto_banderas, "%03d", banderas_colocadas);
+        mostrar_texto(renderer, fuente_digital, texto_banderas, padding, padding, 0);
+        sprintf(texto_tiempo, "%03d", segundos);
+        mostrar_texto(renderer, fuente_digital, texto_tiempo, ancho_ventana - padding, padding, 1);
+
+        SDL_RenderPresent(renderer);
+
         while (SDL_PollEvent(&e))
         {
             if (e.type == SDL_QUIT)
@@ -180,11 +206,13 @@ int main(int argc, char* argv[])
                         if(bandera2 == 0){
                             dibujar(ventana, renderer, bandera, x, y);
                             obtener_fecha(&f);
+                            banderas_colocadas--;
                             fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                         else if(bandera2 ==1){
                             dibujar(ventana, renderer, casilla, x, y);
                             obtener_fecha(&f);
+                            banderas_colocadas++;
                             fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
                         }
                     }
@@ -200,6 +228,8 @@ int main(int argc, char* argv[])
                         jugador_gano=0;
                         victoria_mostrada=0;
                         primer_click=0;
+                        segundos=0;
+                        banderas_colocadas=valor_de_las_minas(&par);
                     }
                 }
             }
@@ -210,6 +240,7 @@ int main(int argc, char* argv[])
     SDL_DestroyWindow(ventana);
     TTF_CloseFont(fuente_resultado);
     TTF_CloseFont(fuente_inicio);
+    TTF_CloseFont(fuente_digital);
 
     liberar_matriz(matriz_minas, par.dimension);
     TTF_Quit();
@@ -220,3 +251,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
