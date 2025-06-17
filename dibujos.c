@@ -1000,6 +1000,11 @@ Estado iniciar_juego()
             {
                 SDL_DestroyRenderer(renderer);
                 SDL_DestroyWindow(ventana);
+                for(int j=0; j<=i-cant_partidas; j++){
+                    sprintf(linea,"%s", &contenido_stats[j][0]);
+                    fprintf(stats,"%s", linea);
+                }
+                fclose(stats);
                 return PANTALLA_MENU;  // Volver al menú
             }
             if(!juego_terminado)
@@ -1109,22 +1114,16 @@ Estado iniciar_juego()
         }
         SDL_Delay(100);  // Esta pausa es para evitar que el procesador se ponga al 100% renderizando constantemente.
     }
+
+    liberar_matriz(matriz_minas, par.dimension);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(ventana);
     TTF_CloseFont(fuente_resultado);
     TTF_CloseFont(fuente_inicio);
     TTF_CloseFont(fuente_digital);
 
-    liberar_matriz(matriz_minas, par.dimension);
-
-
-    for(int j=0; j<i-cant_partidas; j++){
-        sprintf(linea,"%s", &contenido_stats[j][0]);
-        fprintf(stats,"%s", linea);
-    }
-
     fclose(log);
-    fclose(stats);
     return PANTALLA_MENU;
 }
 
