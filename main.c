@@ -15,8 +15,6 @@ Entrega: Si
 */
 #include "dibujos.h"
 #include "configuracion.h"
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
 
 
 int main(int argc, char* argv[])

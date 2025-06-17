@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <stdio.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 
 #define TODO_OK 1
 #define ERROR_ARCH  2
@@ -15,6 +18,7 @@ typedef struct
 {
     int dimension;
     char cantidad_minas[4];
+    char usuario[30];
 }t_parametria;
 
 typedef struct

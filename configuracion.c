@@ -10,6 +10,7 @@ int leer_archivo(t_parametria* param)
     char linea[100];
     while (fgets(linea, sizeof(linea), archConfiguracion))
     {
+        sscanf(linea, "usuario:%s", param->usuario);
         sscanf(linea, "dimension:%d", &param->dimension);
         sscanf(linea, "cantidad de minas:%s", param->cantidad_minas);
     }
@@ -53,6 +54,7 @@ int guardar_configuracion(t_parametria par)
     if(!archConfiguracion)
         return ERROR_ARCH;
 
+    fprintf(archConfiguracion,"usuario:%s\n", par.usuario);
     fprintf(archConfiguracion,"dimension:%d\n", par.dimension);
     fprintf(archConfiguracion,"cantidad de minas:%s", par.cantidad_minas);
     fclose(archConfiguracion);
