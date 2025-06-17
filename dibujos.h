@@ -64,6 +64,4 @@ Estado validar_click_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect b
 Estado iniciar_juego();
 Estado mostrar_estadisticas(TTF_Font* fuente);
 
-
-
 #endif // DIBUJOS_H_INCLUDED

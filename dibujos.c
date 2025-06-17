@@ -891,14 +891,34 @@ Estado iniciar_juego()
 
     t_fecha f;
     FILE *log, *stats;
+    char contenido_stats[10][50], linea[50];
+    int i=0, cant_partidas = 0;
 
     log = fopen("buscaminas.log", "wt");
     if(!log){
         return 1;
     }
 
+    stats = fopen("buscaminas.stats", "rt");
+    if(!stats){
+        fclose(log);
+        return 1;
+    }
+
+    while (fgets(&contenido_stats[i][0], sizeof(linea), stats)){
+        i++;
+    }
+    fclose(stats);
+
+    stats = fopen("buscaminas.stats", "w");
+    if(!stats){
+        fclose(log);
+        return 1;
+    }
+
     if(leer_archivo(&par)==ERROR_ARCH)
     {
+        fclose(log);
         TTF_CloseFont(fuente_resultado);
         TTF_CloseFont(fuente_inicio);
         TTF_Quit();
@@ -906,7 +926,6 @@ Estado iniciar_juego()
     }
 
     int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
-
 
     // Inicialización del temporizador
     Uint32 tiempo_ultimo_segundo = SDL_GetTicks();
@@ -997,8 +1016,10 @@ Estado iniciar_juego()
                 victoria_mostrada =1;
                 obtener_fecha(&f);
                 fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin de juego - Partida ganada\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+
                 fprintf(stats, "jugador:%s|tiempo:%d|resultado:gano\n", par.usuario, segundos);
-                fclose(stats);
+                cant_partidas++;
+
                 mostrar_pantalla_final(fuente_resultado, "GANASTE", N);
             }
 
@@ -1019,12 +1040,6 @@ Estado iniciar_juego()
                             obtener_fecha(&f);
                             fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Inicia partida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
                             primer_click = 1;
-
-                            stats = fopen("buscaminas.stats", "a");
-                            if(!stats){
-                                fclose(log);
-                                return 1;
-                            }
 
                             if(matriz_minas[y][x].con_mina){
                                 colocar_minas(matriz_minas, &par);
@@ -1050,10 +1065,11 @@ Estado iniciar_juego()
                             juego_terminado = true;
                             obtener_fecha(&f);
                             fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin de juego - Partida perdida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+
                             fprintf(stats, "jugador:%s|tiempo:%d|resultado:perdio\n", par.usuario, segundos);
-                            fclose(stats);
+                            cant_partidas++;
+
                             mostrar_pantalla_final(fuente_resultado, "PERDISTE", R);
-                           // mostrar_estadisticas(fuente_resultado);
                         }
                     }
                     else if (boton == SDL_BUTTON_RIGHT)
@@ -1101,6 +1117,12 @@ Estado iniciar_juego()
 
     liberar_matriz(matriz_minas, par.dimension);
 
+
+    for(int j=0; j<i-cant_partidas; j++){
+        sprintf(linea,"%s", &contenido_stats[j][0]);
+        fprintf(stats,"%s", linea);
+    }
+
     fclose(log);
     fclose(stats);
     return PANTALLA_MENU;
@@ -1136,7 +1158,7 @@ Estado mostrar_estadisticas(TTF_Font* fuente){
     }
 
     SDL_Color fondo = colores[0];
-    SDL_Color texto = colores[N];
+    SDL_Color texto = colores[B];
 
     SDL_SetRenderDrawColor(renderer, fondo.r, fondo.g, fondo.b, fondo.a);
     SDL_RenderClear(renderer);
@@ -1144,7 +1166,6 @@ Estado mostrar_estadisticas(TTF_Font* fuente){
     int i = 0;
     while (fgets(linea, sizeof(linea), stats))
     {
-
         sscanf(linea, "jugador:%s\ttiempo:%d\tresultado:%s", usuario, &seg, resultado);
         printf("%s %d %s\n", usuario, seg, resultado);
 
@@ -1169,6 +1190,9 @@ Estado mostrar_estadisticas(TTF_Font* fuente){
         SDL_RenderCopy(renderer, texture, NULL, &destino);
         SDL_RenderPresent(renderer);
         i++;
+
+        if(i==10)
+            break;
     }
 
         SDL_Event e;
