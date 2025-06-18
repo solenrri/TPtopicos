@@ -905,7 +905,7 @@ Estado iniciar_juego()
         return 1;
     }
 
-    while (fgets(&contenido_stats[i][0], sizeof(linea), stats)){
+    while (fgets(&contenido_stats[i][0], sizeof(linea), stats) && i!=10){
         i++;
     }
     fclose(stats);
@@ -1000,7 +1000,7 @@ Estado iniciar_juego()
             {
                 SDL_DestroyRenderer(renderer);
                 SDL_DestroyWindow(ventana);
-                for(int j=0; j<=i-cant_partidas; j++){
+                for(int j=0; j<i; j++){
                     sprintf(linea,"%s", &contenido_stats[j][0]);
                     fprintf(stats,"%s", linea);
                 }
