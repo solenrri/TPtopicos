@@ -643,7 +643,7 @@ void crear_pantalla_inicio(TTF_Font* fuente, t_parametria par)
     }
 
 
-    SDL_Surface* fondo_surface = IMG_Load("fondo_inicio.png");
+    SDL_Surface* fondo_surface = IMG_Load("img/fondo_inicio.png");
     if (!fondo_surface)
     {
         printf("No se pudo cargar la imagen de fondo\n");
@@ -864,12 +864,13 @@ Estado validar_click_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect b
                     if(SDL_PointInRect(&(SDL_Point){x,y},&botones_menu[i]))
                     {
                         switch(i)
-                       {
-                           case 0:
+                        {
+                            case 0:
                                return PANTALLA_JUEGO;
 
-                           case 1:
+                            case 1:
                                return PANTALLA_CONTINUAR_PARTIDA;
+
                             case 2:
                                 return PANTALLA_ESTADISTICAS;
                        }
@@ -882,6 +883,105 @@ Estado validar_click_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect b
 
     return PANTALLA_MENU;
 }
+
+Estado mostrar_estadisticas(TTF_Font* fuente){
+    FILE *stats;
+    char usuario[30], resultado[6];
+    int seg;
+
+    stats = fopen("buscaminas.stats", "rt");
+
+    char linea[50];
+
+    SDL_Window* ventana_mensaje = SDL_CreateWindow(
+        "Estadisticas",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        400, 220,
+        SDL_WINDOW_SHOWN
+    );
+
+    if (!ventana_mensaje) {
+        printf("Error al crear ventana: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(ventana_mensaje, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        SDL_DestroyWindow(ventana_mensaje);
+        printf("Error al crear renderer: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Color fondo = colores[0];
+    SDL_Color texto = colores[B];
+
+    SDL_SetRenderDrawColor(renderer, fondo.r, fondo.g, fondo.b, fondo.a);
+    SDL_RenderClear(renderer);
+
+    int i = 0;
+    while (fgets(linea, sizeof(linea), stats))
+    {
+        sscanf(linea, "jugador:%s\ttiempo:%d\tresultado:%s", usuario, &seg, resultado);
+        printf("%s %d %s\n", usuario, seg, resultado);
+
+        SDL_Surface* surface = TTF_RenderText_Blended(fuente, linea, texto);
+        if (!surface) {
+            printf("Error al renderizar texto: %s\n", TTF_GetError());
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyWindow(ventana_mensaje);
+            return 1;
+        }
+
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_Rect destino =
+        {20,
+            i*20,
+            surface->w,
+            surface->h
+        };
+        SDL_FreeSurface(surface);
+
+
+        SDL_RenderCopy(renderer, texture, NULL, &destino);
+        SDL_RenderPresent(renderer);
+        i++;
+
+        if(i==10)
+            break;
+    }
+
+        SDL_Event e;
+        int esperando = 1;
+        while (esperando)
+        {
+            while (SDL_PollEvent(&e))
+            {
+                if (e.type == SDL_QUIT || e.type == SDL_MOUSEBUTTONDOWN)
+                {
+                    esperando = 0;
+                    SDL_DestroyRenderer(renderer);
+                    SDL_DestroyWindow(ventana_mensaje);
+                    return PANTALLA_SALIR;
+                }
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+                {
+                    SDL_DestroyRenderer(renderer);
+                    SDL_DestroyWindow(ventana_mensaje);
+                    return PANTALLA_MENU;
+                }
+            }
+            SDL_Delay(10);
+        }
+
+        //SDL_DestroyTexture(texture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(ventana_mensaje);
+
+    fclose(stats);
+    return PANTALLA_MENU;
+}
+
 Estado iniciar_juego()
 {
     TTF_Font* fuente_resultado = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
@@ -955,7 +1055,7 @@ Estado iniciar_juego()
     char texto_tiempo[32];
     char texto_banderas[32];
 
-    TTF_Font* fuente_digital = TTF_OpenFont("DS-DIGI.TTF", calcular_tamano_fuente(par.dimension));
+    TTF_Font* fuente_digital = TTF_OpenFont("fnt/DS-DIGI.TTF", calcular_tamano_fuente(par.dimension));
 
     SDL_Rect boton_reinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
 
@@ -1004,6 +1104,11 @@ Estado iniciar_juego()
                     sprintf(linea,"%s", &contenido_stats[j][0]);
                     fprintf(stats,"%s", linea);
                 }
+
+                if(juego_terminado ==0){
+                    guardar_partida(matriz_minas, &par, segundos);
+                }
+
                 fclose(stats);
                 return PANTALLA_MENU;  // Volver al menú
             }
@@ -1127,100 +1232,282 @@ Estado iniciar_juego()
     return PANTALLA_MENU;
 }
 
-Estado mostrar_estadisticas(TTF_Font* fuente){
-    FILE *stats;
-    char usuario[30], resultado[6];
-    int seg;
+int guardar_partida(t_celda **mat, t_parametria* param, int tiempo){
+    FILE *partida;
+
+    partida = fopen("partida.bin", "wb");
+
+    if(!partida){
+        return 1;
+    }
+
+    //Escribo parametros ingresados en partida
+    fwrite(param, sizeof(t_parametria), 1, partida);
+
+    for(int i=0;i<param->dimension;i++)
+    {
+        for(int j=0;j<param->dimension;j++)
+        {
+            fwrite(&mat[i][j], sizeof(t_celda), 1, partida);
+        }
+    }
+
+    return TODO_OK;
+}
+
+Estado retomar_juego()
+{
+    TTF_Font* fuente_resultado = TTF_OpenFont("WorkSans-VariableFont_wght.ttf", 36);
+    TTF_Font* fuente_inicio = TTF_OpenFont("BebasNeue-Regular.ttf", 26);
+    t_parametria par;
+    t_fecha f;
+    FILE *log, *stats, *partida;
+    char contenido_stats[10][50], linea[50];
+    int i=0, cant_partidas = 0;
+
+    log = fopen("buscaminas.log", "wt");
+    if(!log){
+        return 1;
+    }
 
     stats = fopen("buscaminas.stats", "rt");
-
-    char linea[50];
-
-    SDL_Window* ventana_mensaje = SDL_CreateWindow(
-        "Estadisticas",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        400, 220,
-        SDL_WINDOW_SHOWN
-    );
-
-    if (!ventana_mensaje) {
-        printf("Error al crear ventana: %s\n", SDL_GetError());
+    if(!stats){
+        fclose(log);
         return 1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(ventana_mensaje, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        SDL_DestroyWindow(ventana_mensaje);
-        printf("Error al crear renderer: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    SDL_Color fondo = colores[0];
-    SDL_Color texto = colores[B];
-
-    SDL_SetRenderDrawColor(renderer, fondo.r, fondo.g, fondo.b, fondo.a);
-    SDL_RenderClear(renderer);
-
-    int i = 0;
-    while (fgets(linea, sizeof(linea), stats))
-    {
-        sscanf(linea, "jugador:%s\ttiempo:%d\tresultado:%s", usuario, &seg, resultado);
-        printf("%s %d %s\n", usuario, seg, resultado);
-
-        SDL_Surface* surface = TTF_RenderText_Blended(fuente, linea, texto);
-        if (!surface) {
-            printf("Error al renderizar texto: %s\n", TTF_GetError());
-            SDL_DestroyRenderer(renderer);
-            SDL_DestroyWindow(ventana_mensaje);
-            return 1;
-        }
-
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_Rect destino =
-        {20,
-            i*20,
-            surface->w,
-            surface->h
-        };
-        SDL_FreeSurface(surface);
-
-
-        SDL_RenderCopy(renderer, texture, NULL, &destino);
-        SDL_RenderPresent(renderer);
+    while (fgets(&contenido_stats[i][0], sizeof(linea), stats) && i!=10){
         i++;
+    }
+    fclose(stats);
 
-        if(i==10)
-            break;
+    stats = fopen("buscaminas.stats", "w");
+    if(!stats){
+        fclose(log);
+        return 1;
     }
 
-        SDL_Event e;
-        int esperando = 1;
-        while (esperando)
+    //
+    partida = fopen("partida.bin", "rb");
+    if(!partida){
+        fclose(log);
+        fclose(stats);
+        return 1;
+    }
+    fread(&par, sizeof(t_parametria), 1, partida);
+
+    if(leer_archivo(&par)==ERROR_ARCH)
+    {
+        fclose(log);
+        TTF_CloseFont(fuente_resultado);
+        TTF_CloseFont(fuente_inicio);
+        TTF_Quit();
+        return 1;
+    }
+
+    int ancho_ventana = par.dimension*TAM_PIXEL*PIXELES_X_LADO + par.dimension*PX_PADDING;
+
+    // Inicialización del temporizador
+    Uint32 tiempo_ultimo_segundo = SDL_GetTicks();
+    int segundos = 0;
+
+    char nombre_ventana[100];
+    sprintf(nombre_ventana, "Tablero %dx%d",par.dimension,par.dimension);
+    SDL_Window *ventana = SDL_CreateWindow(nombre_ventana,
+                                           SDL_WINDOWPOS_CENTERED,
+                                           SDL_WINDOWPOS_CENTERED,
+                                           ancho_ventana, ancho_ventana + ENCABEZADO,
+                                           2);
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(ventana, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    borrar_pantalla(ventana, renderer);
+    srand(time(0));
+
+    SDL_Event e;
+    int corriendo = 1;
+    int juego_terminado = 0;
+    int jugador_gano =0;
+    int victoria_mostrada = 0;
+    int banderas_colocadas = valor_de_las_minas(&par);
+    int padding = 10;
+    char texto_tiempo[32];
+    char texto_banderas[32];
+
+    TTF_Font* fuente_digital = TTF_OpenFont("fnt/DS-DIGI.TTF", calcular_tamano_fuente(par.dimension));
+
+    SDL_Rect boton_reinicio = {ancho_ventana/2 - ANCHO_BOTON_REINICIO/2, (ENCABEZADO - ALTO_BOTON_REINICIO)/2, ANCHO_BOTON_REINICIO, ALTO_BOTON_REINICIO};
+
+    dibujar_encabezado(renderer, ancho_ventana, boton_reinicio);
+    dibujar_campo(ventana, renderer, casilla, par.dimension);
+
+    t_celda** matriz_minas = crear_matriz(par.dimension);
+
+    //colocar_minas(matriz_minas, &par);
+
+    for(int i=0;i<par.dimension; i++)
+    {
+        for(int j=0;j<par.dimension; j++)
         {
-            while (SDL_PollEvent(&e))
+            fread(&matriz_minas[i][j], sizeof(t_celda), 1, partida);
+            printf("%d ", matriz_minas[i][j].con_mina);
+        }
+        printf("\n");
+    }
+
+    mostrar_matriz_minas(matriz_minas, par.dimension);
+    printf("\n");
+    mostrar_matriz_minas_ady(matriz_minas, par.dimension);
+
+    obtener_fecha(&f);
+    fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Retoma partida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+
+    while (corriendo)
+    {
+        // Controlar si pasó un segundo para actualizar el temporizador
+        Uint32 tiempo_actual = SDL_GetTicks();
+        if (tiempo_actual - tiempo_ultimo_segundo >= 1000 && juego_terminado!=1) {
+            segundos++;
+            tiempo_ultimo_segundo = tiempo_actual;
+        }
+        // Redibujar encabezado y contadores
+        dibujar_encabezado(renderer, ancho_ventana,boton_reinicio);
+        sprintf(texto_banderas, "%03d", banderas_colocadas);
+        mostrar_texto(renderer, fuente_digital, texto_banderas, padding, padding, 0);
+        sprintf(texto_tiempo, "%03d", segundos);
+        mostrar_texto(renderer, fuente_digital, texto_tiempo, ancho_ventana - padding, padding, 1);
+
+        SDL_RenderPresent(renderer);
+
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
             {
-                if (e.type == SDL_QUIT || e.type == SDL_MOUSEBUTTONDOWN)
-                {
-                    esperando = 0;
-                    SDL_DestroyRenderer(renderer);
-                    SDL_DestroyWindow(ventana_mensaje);
-                    return PANTALLA_SALIR;
+                corriendo = 0;
+                SDL_DestroyRenderer(renderer);
+                SDL_DestroyWindow(ventana);
+                return PANTALLA_SALIR;
+                printf("Saliendo de SDL\n");
+            }
+
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+            {
+                SDL_DestroyRenderer(renderer);
+                SDL_DestroyWindow(ventana);
+                for(int j=0; j<i; j++){
+                    sprintf(linea,"%s", &contenido_stats[j][0]);
+                    fprintf(stats,"%s", linea);
                 }
-                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+
+                if(juego_terminado !=0){
+                    guardar_partida(matriz_minas, &par, segundos);
+                }
+
+                fclose(stats);
+                return PANTALLA_MENU;  // Volver al menú
+            }
+            if(!juego_terminado)
+            {
+                int resultado = verificar_victoria(matriz_minas,par.dimension);
+                if(resultado==1 || resultado==2)
                 {
-                    SDL_DestroyRenderer(renderer);
-                    SDL_DestroyWindow(ventana_mensaje);
-                    return PANTALLA_MENU;
+                    juego_terminado=1;
+                    jugador_gano=1;
                 }
             }
-            SDL_Delay(10);
+            if(juego_terminado &&jugador_gano && !victoria_mostrada)
+            {
+                victoria_mostrada =1;
+                obtener_fecha(&f);
+                fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin de juego - Partida ganada\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+
+                fprintf(stats, "jugador:%s|tiempo:%d|resultado:gano\n", par.usuario, segundos);
+                cant_partidas++;
+
+                mostrar_pantalla_final(fuente_resultado, "GANASTE", N);
+            }
+
+
+            if(e.type == SDL_MOUSEBUTTONDOWN)
+            {
+                int tam_celda = PIXELES_X_LADO * TAM_PIXEL + PX_PADDING;
+                int boton = e.button.button;
+                int x, y;
+                if(e.button.y >= ENCABEZADO && juego_terminado==0)
+                {
+                    x = e.button.x / tam_celda;
+                    y = (e.button.y - ENCABEZADO) / tam_celda;
+                    if (boton == SDL_BUTTON_LEFT)
+                    {
+                        if(matriz_minas[y][x].revelada && matriz_minas[y][x].minas_cercanas != 0 && (!matriz_minas[y][x].con_mina))
+                        {
+                            revelar_cercanas(matriz_minas, y, x, ventana, renderer, par.dimension);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                        }
+                        else
+                        {
+                            revelar_celdas(matriz_minas, y, x, ventana, renderer, par.dimension);
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click izquierdo en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                        }
+                        if(verificar_derrota(matriz_minas, par.dimension))
+                        {
+                            juego_terminado = true;
+                            obtener_fecha(&f);
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): Fin de juego - Partida perdida\n", f.dia, f.mes, f.anio, f.h, f.m, f.s);
+
+                            fprintf(stats, "jugador:%s|tiempo:%d|resultado:perdio\n", par.usuario, segundos);
+                            cant_partidas++;
+
+                            mostrar_pantalla_final(fuente_resultado, "PERDISTE", R);
+                        }
+                    }
+                    else if (boton == SDL_BUTTON_RIGHT)
+                    {
+                        int bandera2 = des_asig_bandera(matriz_minas, y, x);
+
+                        if(bandera2 == 0){
+                            dibujar(ventana, renderer, bandera, x, y);
+                            obtener_fecha(&f);
+                            banderas_colocadas--;
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                        }
+                        else if(bandera2 ==1){
+                            dibujar(ventana, renderer, casilla, x, y);
+                            obtener_fecha(&f);
+                            banderas_colocadas++;
+                            fprintf(log, "(%02d/%02d/%4d %02d:%02d:%02d): click derecho en (%d, %d)\n", f.dia, f.mes, f.anio, f.h, f.m, f.s, y, x);
+                        }
+                    }
+                }
+                else
+                {
+                    x = e.button.x;
+                    y = e.button.y;
+                    if(x>=boton_reinicio.x && x<=boton_reinicio.x + boton_reinicio.w && y>=boton_reinicio.y && y<=boton_reinicio.y + boton_reinicio.h)
+                    {
+                        reiniciar_juego(&matriz_minas, par, renderer, ventana, ancho_ventana, boton_reinicio, casilla);
+                        juego_terminado =0;
+                        jugador_gano=0;
+                        victoria_mostrada=0;
+                        segundos=0;
+                        banderas_colocadas=valor_de_las_minas(&par);
+                    }
+                }
+            }
         }
+        SDL_Delay(100);  // Esta pausa es para evitar que el procesador se ponga al 100% renderizando constantemente.
+    }
 
-        //SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(ventana_mensaje);
+    liberar_matriz(matriz_minas, par.dimension);
 
-    fclose(stats);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(ventana);
+    TTF_CloseFont(fuente_resultado);
+    TTF_CloseFont(fuente_inicio);
+    TTF_CloseFont(fuente_digital);
+
+    fclose(log);
     return PANTALLA_MENU;
 }

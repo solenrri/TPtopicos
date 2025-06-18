@@ -1,6 +1,5 @@
 #ifndef DIBUJOS_H_INCLUDED
 #define DIBUJOS_H_INCLUDED
-#include "configuracion.h"
 #define TAM_PIXEL 4
 #define PIXELES_X_LADO 8
 #define PX_PADDING 4
@@ -10,6 +9,7 @@
 #define MINA 1
 #define VACIA 0
 #define MAX_CARAC   30
+#include "configuracion.h"
 
 #define G 0 // Gris
 #define C 1 // Claro
@@ -63,5 +63,7 @@ void crear_pantalla_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect bo
 Estado validar_click_menu(SDL_Window *ventana,SDL_Renderer *renderer, SDL_Rect botones_menu[]);
 Estado iniciar_juego();
 Estado mostrar_estadisticas(TTF_Font* fuente);
+int guardar_partida(t_celda **mat, t_parametria* param, int tiempo);
+Estado retomar_juego();
 
 #endif // DIBUJOS_H_INCLUDED

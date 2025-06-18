@@ -51,6 +51,10 @@ int main(int argc, char* argv[])
                 estado = mostrar_estadisticas(fuente_estadisticas);
                 break;
 
+            case PANTALLA_CONTINUAR_PARTIDA:
+                estado = retomar_juego();
+                break;
+
             default:
                 estado = PANTALLA_MENU;
                 break;
